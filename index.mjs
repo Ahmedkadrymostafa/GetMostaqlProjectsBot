@@ -2,6 +2,7 @@ import TelegramBot from "node-telegram-bot-api";
 import dotenv from "dotenv";
 import axios from "axios";
 import * as cheerio from "cheerio";
+import UserAgent from "user-agents"; // Import user-agents
 
 dotenv.config();
 
@@ -16,10 +17,17 @@ const KEYWORDS = ["google", "جوجل", "قوقل", "غوغل"];
 
 async function scrapeProjects() {
     try {
-        // Fetch the HTML content of the page
+        // Generate a random user-agent
+        const userAgent = new UserAgent().toString();
+
+        // Fetch the HTML content with headers
         const { data } = await axios.get(URL, {
             headers: {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+                "User-Agent": userAgent,
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.5",
+                "Referer": "https://www.google.com/",
+                "Connection": "keep-alive",
             },
         });
 
