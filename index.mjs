@@ -1,6 +1,7 @@
-import puppeteer from "puppeteer";
 import TelegramBot from "node-telegram-bot-api";
 import dotenv from "dotenv";
+import axios from "axios";
+import * as cheerio from "cheerio";
 
 dotenv.config();
 
@@ -12,48 +13,37 @@ const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: false });
 const URL = "https://mostaql.com/projects?category=marketing&budget_max=10000&sort=latest";
 const KEYWORDS = ["google", "جوجل", "قوقل", "غوغل"];
 
+
 async function scrapeProjects() {
-    const browser = await puppeteer.launch({ 
-        headless: "new",
-        args: ["--no-sandbox", "--disable-setuid-sandbox"] // Ensure Puppeteer runs properly
-    });
-    
-    const page = await browser.newPage();
-    
     try {
-        await page.setUserAgent(
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        );
-        await page.setViewport({ width: 1280, height: 800 });
-
-        await page.goto(URL, { 
-            waitUntil: "domcontentloaded", // Load the DOM
-            timeout: 60000 
+        // Fetch the HTML content of the page
+        const { data } = await axios.get(URL, {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            },
         });
 
-        // Ensure elements exist before scraping
-        await page.waitForSelector(".project-row .card--title h2 a", { timeout: 20000 });
+        // Load HTML into Cheerio
+        const $ = cheerio.load(data);
 
+        // Select project titles and links
+        const projects = [];
+        $(".project-row .card--title h2 a").each((_, el) => {
+            const title = $(el).text().trim();
+            const link = $(el).attr("href");
 
-        // Extract project titles and links
-        const projects = await page.evaluate(() => {
-            return Array.from(document.querySelectorAll(".project-row .card--title h2 a")).map((el) => ({
-                title: el.innerText.trim(),
-                link: el.href,
-            }));
+            // Check if the title contains keywords
+            if (/google|جوجل|قوقل|غوغل/i.test(title)) {
+                projects.push({ title, link: `https://mostaql.com${link}` });
+            }
         });
-
-
-        await browser.close();
 
         return projects;
     } catch (error) {
         console.error("Error scraping:", error);
-        await browser.close();
         return [];
     }
 }
-
 
 async function checkAndSendProjects() {
     console.log("Checking for new projects...");
