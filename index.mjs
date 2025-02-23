@@ -1,6 +1,7 @@
 import fetch from "node-fetch";
 import dotenv from "dotenv";
 import * as cheerio from "cheerio"; 
+import { HttpsProxyAgent } from "https-proxy-agent";
 
 dotenv.config();
 
@@ -25,7 +26,13 @@ const HEADERS = {
 // Function to fetch and process the page
 async function checkMostaqlProjects() {
     try {
-        const response = await fetch(MOSTAQL_URL, { headers: HEADERS });
+        const proxyUrl = "http://18.223.25.15:80";
+        const agent = new HttpsProxyAgent(proxyUrl);
+        
+        const response = await fetch(MOSTAQL_URL, {
+            headers: HEADERS,
+        });
+        // const response = await fetch(MOSTAQL_URL, { headers: HEADERS });
         if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
 
         const html = await response.text();
