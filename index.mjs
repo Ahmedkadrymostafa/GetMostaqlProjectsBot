@@ -1,78 +1,73 @@
-import TelegramBot from "node-telegram-bot-api";
+import fetch from "node-fetch";
 import dotenv from "dotenv";
-import axios from "axios";
-import * as cheerio from "cheerio";
-import UserAgent from "user-agents"; // Import user-agents
+import * as cheerio from "cheerio"; 
 
 dotenv.config();
 
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+// Telegram Bot Config
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
+const CHAT_ID = process.env.CHAT_ID;
 
-const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: false });
+// URL to scrape
+const MOSTAQL_URL = "https://mostaql.com/projects?category=marketing&budget_max=10000&sort=latest";
 
-const URL = "https://mostaql.com/projects?category=marketing&budget_max=10000&sort=latest";
-const KEYWORDS = ["google", "جوجل", "قوقل", "غوغل"];
+// Headers to simulate a real browser request
+const HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "Cookie": "your_cookie_here" // Optional, add if necessary
+};
 
-
-async function scrapeProjects() {
+// Function to fetch and process the page
+async function checkMostaqlProjects() {
     try {
-        // Generate a random user-agent
-        const userAgent = new UserAgent().toString();
+        const response = await fetch(MOSTAQL_URL, { headers: HEADERS });
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
 
-        // Fetch the HTML content with headers
-        const { data } = await axios.get(URL, {
-            headers: {
-                "User-Agent": userAgent,
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-                "Accept-Language": "en-US,en;q=0.5",
-                "Referer": "https://www.google.com/",
-                "Connection": "keep-alive",
-            },
-        });
+        const html = await response.text();
+        const $ = cheerio.load(html);
 
-        // Load HTML into Cheerio
-        const $ = cheerio.load(data);
+        $(".project-row .card--title h2 a").each(async (_, element) => {
+            const title = $(element).text().trim();
+            const link = $(element).attr("href").startsWith("http") ? $(element).attr("href") : `https://mostaql.com${$(element).attr("href")}`;
 
-        // Select project titles and links
-        const projects = [];
-        $(".project-row .card--title h2 a").each((_, el) => {
-            const title = $(el).text().trim();
-            const link = $(el).attr("href");
-
-            // Check if the title contains keywords
+            // Check if title contains target words
             if (/google|جوجل|قوقل|غوغل/i.test(title)) {
-                projects.push({ title, link: `https://mostaql.com${link}` });
+                console.log(`Matched Project: ${title}`);
+                await sendTelegramMessage(`🔍 **New Project Found!**\n\n📌 **Title:** ${title}\n🔗 [View Project](${link})`);
             }
         });
 
-        return projects;
     } catch (error) {
-        console.error("Error scraping:", error);
-        return [];
+        console.error("Error fetching Mostaql:", error);
     }
 }
 
-async function checkAndSendProjects() {
-    console.log("Checking for new projects...");
-    
-    const projects = await scrapeProjects();
+// Function to send a Telegram message
+async function sendTelegramMessage(text) {
+    const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+    const payload = {
+        chat_id: CHAT_ID,
+        text: text,
+        parse_mode: "Markdown"
+    };
 
-    for (const project of projects) {
-        if (KEYWORDS.some((keyword) => project.title.toLowerCase().includes(keyword))) {
-            const message = `🔹 *New Project Found!*\n\n*Title:* ${project.title}\n🔗 [View Project](${project.link})`;
-            
-            bot.sendMessage(TELEGRAM_CHAT_ID, message, { parse_mode: "Markdown" });
-        }
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error(`Telegram API Error: ${response.statusText}`);
+        console.log("✅ Message sent to Telegram!");
+
+    } catch (error) {
+        console.error("Error sending message:", error);
     }
-
-    console.log("Check completed.");
 }
 
-// Run the script every hour
-setInterval(checkAndSendProjects, 60 * 60 * 1000);
+// Run every hour (3600000 ms)
+setInterval(checkMostaqlProjects, 3600000);
 
 // Run immediately on start
-checkAndSendProjects();
-
-
+checkMostaqlProjects();
