@@ -13,8 +13,13 @@ const MOSTAQL_URL = "https://mostaql.com/projects?category=marketing&budget_max=
 
 // Headers to simulate a real browser request
 const HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-    "Cookie": "your_cookie_here" // Optional, add if necessary
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:110.0) Gecko/20100101 Firefox/110.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Referer": "https://www.google.com/",
+    "Cookie": "XSRF-TOKEN=eyJpdiI6IjlLQm1ESkNXUXpjZEp5WkVGUVByQ2c9PSIsInZhbHVlIjoiTnlxQWx1UGJtQVpvczFBS1ZJMDR0ek5tUzBSUFJiaWdmdzk5bFhMZ29ndHA5dGxteFJxY2NhaGhMTFNHajVrUjhRNGFyK2QzaWVnekkzVHA5Q3Y2UzhtamdocG0vZytJZUdTTmRxMnllOGNpUnR2RFkyUENjSlg1TXd1cGMzTE8iLCJtYWMiOiI0OGE5MWJkNjJjYzNmYWYzMDAwOTFiMWRiYzQ1ZDc4OTI4ZmM2YWQ4MDU4YTRmOTcxOWE2YWVmZThjMDI4ZTIxIiwidGFnIjoiIn0%3D; mostaqlweb=eyJpdiI6Ikw1SmI3Um9rekZaVXQ1TU9Femhta3c9PSIsInZhbHVlIjoiZm5PZHpVaGpwSW9Nays1QSs5aHpKM2VmbHRpeE1EamJjNHRZN3NWWm9RT2VGeExQSWxRTmxFSG8vcGIyTWFkTHlOS25oeWpNWldvUEIxVjVyeVREWVNVbWF4UTM2THN5U0tQc3NrdjdWN3hMSmxkOTNvcUpIazNZbi9zZUluangiLCJtYWMiOiI4ZDQ0MjQwMmI3YTQ5NDkxZDFkZDZmMmI1ZTk1ZDdmYWVjYjA1NTBmYzdmYTY1NjcwNThhMjg1YTk3M2ViYTYwIiwidGFnIjoiIn0%3D;"
 };
 
 // Function to fetch and process the page
